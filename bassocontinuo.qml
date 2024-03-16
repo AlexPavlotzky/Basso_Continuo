@@ -47,6 +47,40 @@ MuseScore {
         return mode;
     }
 
+    function calculateGrades(array) {
+        const gradeMapping = {
+            "-12": -8,
+            "-10": -7,
+            "-9": -6,
+            "-8": -6,
+            "-7": -5,
+            "-5": -4,
+            "-4": -3,
+            "-3": -3,
+            "-2": -2,
+            "-1": -2,
+            "0": 1,
+            "2": 2,
+            "3": 3,
+            "4": 3,
+            "5": 4,
+            "7": 5,
+            "8": 6,
+            "9": 6,
+            "10": 7,
+            "11": 7,
+            "12": 8,
+            "14": 9,
+            "15": 10,
+            "16": 10,
+            "17": 11,
+            "18": 18,
+            "19": 18
+        };
+
+        return array.map(grade => gradeMapping[grade.toString()] || grade);
+    }
+
     function intervalDirection(array) {
         var directions = [];
         directions.push("fundamental");
@@ -62,240 +96,75 @@ MuseScore {
         return directions;
     }
 
-    function dandrieu(numberofsemitones, directionsofintervals, mode) {
+    function dandrieu(grades, directionsofintervals, mode) {
         var cifrasarray = [];
-
-        var ascendingdictionary = {
-            grade1: ['835', '583', '358'],
-            grade2: ['634', '46b3', '34#6'],
-            grade3: ['683', '368', '836'],
-            grade4: ['563', '356', '635'],
-            grade5: ['358', '835', '58#3'],
-            grade6: ['36', 'b63b6', '363'],
-            grade7: ['3b56', '63b5', 'b563'],
-            grade8: ['35', '583', '358']
+        var figuredbass = {
+            major: ['835', '634', '683', '563', '358', '36', '3b56', '35', '34#6', '624', '836', '643'],
+            minor: ['358', '34#6','836', '635', '58#3', '363', 'b563', '358', '463', '#462', '683', '43#6']
         };
 
-        var descendingdictionary = {
-            grade1: ['835', '583', '358'],
-            grade2: ['643', 'b364', '43#6'],
-            grade3: ['836', '368', '683'],
-            grade4: ['624', '246', '#462'],
-            grade5: ['358', '835', '58#3'],
-            grade6: ['34#6', '634', '463'],
-            grade7: ['36', '636', '363'],
-            grade8: ['35', '583', '358']
+        var gradeMap = {
+            "-4": 4,
+            "-3": {
+                asciende: 5,
+                desciende: 5,
+                unisono: -1
+            },
+            "-2": {
+                asciende: 5,
+                desciende: 6,
+                unisono: -1
+            },
+            "1": 0,
+            "2": {
+                asciende: 1,
+                desciende: 11,
+                unisono: -1
+            },
+            "3": {
+                asciende: 2,
+                desciende: 10,
+                unisono: -1
+            },
+            "4": {
+                asciende: 3,
+                desciende: 3,
+                unisono: -1
+            },
+            "5": 4,
+            "6": {
+                asciende: 5,
+                desciende: 8,
+                unisono: -1
+            },
+            "7": {
+                asciende: 5,
+                desciende: 5,
+                unisono: -1
+            },
+            "8": 7
         };
-        
-        for (var i = 0; i < numberofsemitones.length; i++) {
-            if (mode == "major") {
-                if (numberofsemitones[i] == 0 && directionsofintervals[i] == "fundamental") {
-                    cifrasarray.push(ascendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "fundamental") {
-                    cifrasarray.push(ascendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 2 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade2[0]);
-                } else if (numberofsemitones[i] == 2 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade2[0]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] == 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade2[0]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] == 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(descendingdictionary.grade2[0]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] !== 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] !== 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(descendingdictionary.grade1[0]);
-                } else if (numberofsemitones[i] == 4 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade3[0]);
-                } else if (numberofsemitones[i] == 4 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade3[0]);
-                } else if (numberofsemitones[i] == 4 && directionsofintervals [i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade3[0]);
-                } else if (numberofsemitones[i] == 4 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade3[0]);
-                } else if (numberofsemitones[i] == 5 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade4[0]);
-                } else if (numberofsemitones[i] == 5 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade4[0]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] == 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade4[0]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] == 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(descendingdictionary.grade4[0]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] !== 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade4[0]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] !== 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(ascendingdictionary.grade4[0]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade5[0]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade5[0]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[0]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[0]);
-                } else if (numberofsemitones[i] == 9 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == 9 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == 9 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == 9 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade8[0]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade8[0]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade8[0]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade8[0]);
-                } else if (numberofsemitones[i] == -1 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == -1 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == -1 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == -1 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[0]);
-                } else if (numberofsemitones[i] == -3 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == -3 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == -3 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == -3 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[0]);
-                } else if (numberofsemitones[i] == -5 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[0]);
-                } else if (numberofsemitones[i] == -5 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[0]);
+
+        for (var i = 0; i < grades.length; i++) {
+            var grade = grades[i];
+            var direction = directionsofintervals[i];
+            var figureIndex = gradeMap[grade];
+
+            if (typeof figureIndex === 'object') {
+                if (direction === "unisono" || (i > 0 && grades[i] === grades[i - 1])) {
+                    cifrasarray.push(cifrasarray[cifrasarray.length - 1]);
+                } else {
+                    figureIndex = figureIndex[direction];
+                    cifrasarray.push(figuredbass[mode][figureIndex]);
                 }
-            } else if (mode == "minor") {
-                if (numberofsemitones[i] == 0 && directionsofintervals[i] == "fundamental") {
-                    cifrasarray.push(ascendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "fundamental") {
-                    cifrasarray.push(ascendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 0 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 2 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade2[2]);
-                } else if (numberofsemitones[i] == 2 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade2[2]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] == 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade2[2]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] == 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(descendingdictionary.grade2[2]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] !== 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 2 && numberofsemitones[i-1] !== 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(descendingdictionary.grade1[2]);
-                } else if (numberofsemitones[i] == 3 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade3[2]);
-                } else if (numberofsemitones[i] == 3 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade3[2]);
-                } else if (numberofsemitones[i] == 3 && directionsofintervals [i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade3[2]);
-                } else if (numberofsemitones[i] == 3 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade3[2]);
-                } else if (numberofsemitones[i] == 5 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade4[2]);
-                } else if (numberofsemitones[i] == 5 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade4[2]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] == 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade4[2]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] == 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(descendingdictionary.grade4[2]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] !== 4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade4[2]);
-                } else if (numberofsemitones[i] == 5 && numberofsemitones[i+1] !== 4 && directionsofintervals[i] == "unísono") {
-                    cifrasarray.push(ascendingdictionary.grade4[2]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade5[2]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade5[2]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[2]);
-                } else if (numberofsemitones[i] == 7 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[2]);
-                } else if (numberofsemitones[i] == 8 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == 8 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == 8 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == 8 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == 10 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 10 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 10 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 10 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 11 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade8[2]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade8[2]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade8[2]);
-                } else if (numberofsemitones[i] == 12 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade8[2]);
-                } else if (numberofsemitones[i] == -2 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == -2 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == -2 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == -2 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade7[2]);
-                } else if (numberofsemitones[i] == -4 && directionsofintervals[i] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == -4 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "asciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == -4 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == -4 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(ascendingdictionary.grade6[2]);
-                } else if (numberofsemitones[i] == -6 && directionsofintervals[i] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[2]);
-                } else if (numberofsemitones[i] == -6 && directionsofintervals[i] == "unísono" && directionsofintervals[i-1] == "desciende") {
-                    cifrasarray.push(descendingdictionary.grade5[2]);
-                }
+            } else {
+                cifrasarray.push(figuredbass[mode][figureIndex]);
             }
         }
+
         return cifrasarray;
     }
+
 
     function remplacefigures(array) {
         var figuresarray = [];
@@ -352,9 +221,10 @@ MuseScore {
         var referenceNote = getSelectedNotesPitchs()[0]
         var notesArray = getSelectedNotesPitchs()
         var numberSemitones = intervalDistance(notesArray, referenceNote)
-        var mode = calculatemode(numberSemitones)
+        var modes = calculatemode(numberSemitones)
+        var grades = calculateGrades(numberSemitones)
         var directionsIntervals = intervalDirection(notesArray)
-        var cifrasofnotesArray = dandrieu(numberSemitones, directionsIntervals, mode)
+        var cifrasofnotesArray = dandrieu(grades, directionsIntervals, modes)
         var bassocontinuo = remplacefigures(cifrasofnotesArray)
         
         while (segment && segment.type != Element.SEGMENT) { 
