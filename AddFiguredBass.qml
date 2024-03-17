@@ -27,70 +27,112 @@ MuseScore {
         return selectedNotes
     }
 
-    function calculateNumberSemitones(array) {
-        var distances = [];
-        var referenceNote = array[0];
-        for (var i = 0; i < array.length; i++) {
-            var distance = array[i] - referenceNote;
-            distances.push(distance);
-        }
-        return distances;
-    }
+    function detectTonics(notes) {
+        var firstTonic = notes[0]; // Add the first tonic to the tonic array
+        var tonics = [firstTonic];
 
-    function calculateModes(array) {
-        var mode = "";
-
-        for (var i = 0; i < array.length - 1; i++) {
-            if (array[i] == '4' || array[i] == '9' || array[i] == '-1' || array[i] == '-3') {
-                mode = "major";
-            } else if (array[i] == '3' || array[i] == '8' || array[i] == '10' || array[i] == '-2' || array[i] == '-4') {
-                mode = "minor";
+        // Search tonics based on authentic cadences (V-I)
+        for (var i = 1; i < notes.length - 1; i++) { // Iterates up to and including the penultimate element
+            if (Math.abs(notes[i] - notes[i + 1]) === 7) {
+                // Found authentic cadence (V-I)
+                var tonic = notes[i + 1];
+                tonics.push(tonic); // Add the new tonic to the tonic array
             }
         }
-        return mode;
+
+        // Filter consecutive duplicate tonics
+        var filteredTonics = [tonics[0]]; // Initialize the array with the first tonic
+        for (var j = 1; j < tonics.length; j++) {
+            if (tonics[j] !== tonics[j - 1]) {
+                filteredTonics.push(tonics[j]); // If the current key is not the same as the previous one, add it to the filtered array
+            }
+        }
+        return filteredTonics;
     }
 
-    function calculateGrades(array) {
-        const gradeMapping = {
-            "-12": -8,
-            "-10": -7,
-            "-9": -6,
-            "-8": -6,
-            "-7": -5,
-            "-5": -4,
-            "-4": -3,
-            "-3": -3,
-            "-2": -2,
-            "-1": -2,
-            "0": 1,
-            "2": 2,
-            "3": 3,
-            "4": 3,
-            "5": 4,
-            "7": 5,
-            "8": 6,
-            "9": 6,
-            "10": 7,
-            "11": 7,
-            "12": 8,
-            "14": 9,
-            "15": 10,
-            "16": 10,
-            "17": 11,
-            "18": 18,
-            "19": 18
-        };
+    function calculateNumberSemitones(notes) {
+        var tonics = detectTonics(notes); // Get all tonics found
+        var numberofsemitones = {};
+        var i = 0;
 
-        return array.map(grade => gradeMapping[grade.toString()] || grade);
+        // Go through all the tonics found
+        for (var t = 0; t < tonics.length - 1; t++) {
+            var tonic = tonics[t];
+            var nextTonic = tonics[t+1];
+
+            var semitonesArray = [];
+
+            for (i; i < notes.length; i++) {
+                var distance = notes[i] - tonic;
+                semitonesArray.push(distance.toString());
+                if (notes[i+1] == nextTonic && ((parseInt(notes[i]) - 7 == parseInt(notes[i+1])) || (parseInt(notes[i]) + 7 == parseInt(notes[i+1])))) {
+                    i += 1;
+                    break;
+                }
+            }
+
+            numberofsemitones[t.toString()] = semitonesArray; // Use the index string as the key in the object
+        }
+
+        return numberofsemitones;
     }
 
-    function calculateIntervalDirections(array) {
+    function calculateModes(numberofsemitones) {
+        var modes = [];
+
+        for (var key in numberofsemitones) {
+            var semitones = numberofsemitones[key];
+            var mode = "";
+
+            for (var i = 0; i < semitones.length; i++) {
+                // Convertir los elementos de semitones a números enteros
+                var semitone = parseInt(semitones[i]);
+
+                if (semitone === 4 || semitone === 9 || semitone === -1 || semitone === -3) {
+                    mode = "major";
+                } else if (semitone === 3 || semitone === 8 || semitone === 10 || semitone === -2 || semitone === -4) {
+                    mode = "minor";
+                }
+            }
+
+            modes.push(mode);
+        }
+
+        return modes;
+    }
+
+    function calculateGrades(numberofsemitones) {
+        const gradeMapping = { "-12": -8, "-10": -7, "-9": -6, "-8": -6, "-7": -5, "-5": -4, "-4": -3, "-3": -3, "-2": -2,
+            "-1": -2, "0": 1, "2": 2, "3": 3, "4": 3, "5": 4, "7": 5, "8": 6, "9": 6, "10": 7, "11": 7, "12": 8, "14": 9,
+            "15": 10, "16": 10, "17": 11, "18": 18, "19": 18 };
+
+        var grades = {};
+
+        // Loop through all tonics in numberofsemitones
+        for (var tonic in numberofsemitones) {
+            if (numberofsemitones.hasOwnProperty(tonic)) {
+                // Calculate the grades for the semitone distances associated with this tonic
+                var gradesArray = numberofsemitones[tonic].map(grade => gradeMapping[grade.toString()] || grade);
+                // Add the grades to the grades object
+                grades[tonic] = gradesArray;
+            }
+        }
+
+        var gradesArray = [];
+        for (var key in grades) {
+            gradesArray.push(grades[key]);
+        }
+
+        return gradesArray;
+    }
+
+    function calculateIntervalDirections(notes) {
         var directions = [];
         directions.push("fundamental");
-        for (var i = 0; i < array.length - 1; i++) {
-            if (array[i] < array[i + 1]) {
+        for (var i = 0; i < notes.length - 1; i++) {
+            if (notes[i] < notes[i + 1]) {
                 directions.push("ascends");
-            } else if (array[i] > array[i + 1]) {
+            } else if (notes[i] > notes[i + 1]) {
                 directions.push("descends");
             } else {
                 directions.push("unison");
@@ -99,70 +141,58 @@ MuseScore {
         return directions;
     }
 
-    function addFiguredBass(grades, directionsofintervals, mode) {
+    function addFiguredBass(grades, directionsofintervals, modes) {
         var cifrasarray = [];
+        var directions = directionsofintervals;
+        var indexDirection = 0;
         var figuredbass = {
             major: ['835', '634', '683', '563', '358', '36', '3b56', '35', '34#6', '624', '836', '643'],
             minor: ['358', '34#6','836', '635', '58#3', '363', 'b563', '358', '463', '#462', '683', '43#6']
         };
 
         var gradeMap = {
+            "-8": 7,
             "-4": 4,
-            "-3": {
-                ascends: 5,
-                descends: 5,
-                unison: -1
-            },
-            "-2": {
-                ascends: 5,
-                descends: 6,
-                unison: -1
-            },
+            "-3": { ascends: 5, descends: 5, unison: -1 },
+            "-2": { ascends: 5, descends: 6, unison: -1 },
             "1": 0,
-            "2": {
-                ascends: 1,
-                descends: 11,
-                unison: -1
-            },
-            "3": {
-                ascends: 2,
-                descends: 10,
-                unison: -1
-            },
-            "4": {
-                ascends: 3,
-                descends: 3,
-                unison: -1
-            },
+            "2": { ascends: 1, descends: 11, unison: -1 },
+            "3": { ascends: 2, descends: 10, unison: -1 },
+            "4": { ascends: 3, descends: 3, unison: -1 },
             "5": 4,
-            "6": {
-                ascends: 5,
-                descends: 8,
-                unison: -1
-            },
-            "7": {
-                ascends: 5,
-                descends: 5,
-                unison: -1
-            },
+            "6": { ascends: 5, descends: 8, unison: -1 },
+            "7": { ascends: 5, descends: 5, unison: -1 },
             "8": 7
         };
 
-        for (var i = 0; i < grades.length; i++) {
+        for (var i = 0; i < modes.length; i++) {
+            var mode = modes[i];
+            var figureIndex = [];
             var grade = grades[i];
-            var direction = directionsofintervals[i];
-            var figureIndex = gradeMap[grade];
 
-            if (typeof figureIndex === 'object') {
-                if (direction === "unison" || (i > 0 && grades[i] === grades[i - 1])) {
-                    cifrasarray.push(cifrasarray[cifrasarray.length - 1]);
-                } else {
-                    figureIndex = figureIndex[direction];
-                    cifrasarray.push(figuredbass[mode][figureIndex]);
+            for (var t = 0; t < grade.length; t++) {
+                var gradeKey = grade[t].toString();
+                var direction = directions[indexDirection];
+
+                if (gradeMap.hasOwnProperty(gradeKey)) {
+                    var index = gradeMap[gradeKey];
+                    if (typeof index === 'object') {
+                        if (direction === "unison") {
+                            figureIndex.push(figureIndex[indexDirection-1]);
+                            indexDirection += 1;
+                        } else {
+                            index = index[direction];
+                            figureIndex.push(figuredbass[mode][index]);
+                            indexDirection += 1;
+                        }
+                    } else {
+                        figureIndex.push(figuredbass[mode][index]);
+                        indexDirection += 1;
+                    }
                 }
-            } else {
-                cifrasarray.push(figuredbass[mode][figureIndex]);
             }
+
+            cifrasarray = cifrasarray.concat(figureIndex);
         }
 
         return cifrasarray;
@@ -224,8 +254,8 @@ MuseScore {
         }
 
         var numberSemitones = calculateNumberSemitones(selectedNotes)
-        var modes = calculateModes(numberSemitones)
         var grades = calculateGrades(numberSemitones)
+        var modes = calculateModes(numberSemitones)
         var intervalDirections = calculateIntervalDirections(selectedNotes)
         var figuredBass = addFiguredBass(grades, intervalDirections, modes)
         var symbols = replaceSymbols(figuredBass)
