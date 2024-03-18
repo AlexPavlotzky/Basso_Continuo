@@ -280,16 +280,16 @@ MuseScore {
             cursor.rewindToTick(tick)
             cursor.track = selectedElement.track
 
-            while (cursor && cursor.element && selectedNotes.length > 0) {
+            while (cursor && cursor.element && symbols.length > 0) {
                 if (cursor.element.type == Element.CHORD) {
                     var cifrado = newElement(Element.FIGURED_BASS)
-                    cifrado.text = selectedNotes[0]
+                    cifrado.text = symbols[0]
                     
                     curScore.startCmd()
                     cursor.add(cifrado)
                     curScore.endCmd()
 
-                    selectedNotes.shift()
+                    symbols.shift()
                 }
                 cursor.next()
             }
