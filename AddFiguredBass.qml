@@ -28,18 +28,21 @@ MuseScore {
     }
 
     function detectTonics(notes) {
-        var firstTonic = notes[0]; // Add the first tonic to the tonic array
+        var firstTonic = parseInt(notes[0]); // Parse the first tonic to an integer
         var tonics = [firstTonic];
+        var indexTonics = 0;
 
         // Search tonics based on authentic cadences (V-I)
         for (var i = 1; i < notes.length - 1; i++) { // Iterates up to and including the penultimate element
-            if (Math.abs(notes[i] - notes[i + 1]) === 7) {
-                // Found authentic cadence (V-I)
-                var tonic = notes[i + 1];
+            if ((parseInt(notes[i]) + 5 === parseInt(notes[i + 1]) || parseInt(notes[i]) - parseInt(notes[i + 1]) === 7) 
+            && (parseInt(notes[i+1]) !== parseInt(tonics[indexTonics]) + 12
+            && parseInt(notes[i+1]) !== parseInt(tonics[indexTonics]) - 12) 
+            && (parseInt(notes[i]) !== parseInt(tonics[indexTonics]))) { // Found authentic cadence (V-I)
+                var tonic = parseInt(notes[i + 1]);
                 tonics.push(tonic); // Add the new tonic to the tonic array
+                indexTonics += 1;
             }
         }
-
         // Filter consecutive duplicate tonics
         var filteredTonics = [tonics[0]]; // Initialize the array with the first tonic
         for (var j = 1; j < tonics.length; j++) {
@@ -47,6 +50,7 @@ MuseScore {
                 filteredTonics.push(tonics[j]); // If the current key is not the same as the previous one, add it to the filtered array
             }
         }
+        console.log("Tónicas", filteredTonics);
         return filteredTonics;
     }
 
@@ -56,16 +60,16 @@ MuseScore {
         var i = 0;
 
         // Go through all the tonics found
-        for (var t = 0; t < tonics.length - 1; t++) {
+        for (var t = 0; t < tonics.length; t++) {
             var tonic = tonics[t];
             var nextTonic = tonics[t+1];
-
             var semitonesArray = [];
 
             for (i; i < notes.length; i++) {
-                var distance = notes[i] - tonic;
-                semitonesArray.push(distance.toString());
-                if (notes[i+1] == nextTonic && ((parseInt(notes[i]) - 7 == parseInt(notes[i+1])) || (parseInt(notes[i]) + 7 == parseInt(notes[i+1])))) {
+                var distanceofsemitones = parseInt(notes[i]) - parseInt(tonic);
+                semitonesArray.push(distanceofsemitones.toString());
+                if (parseInt(notes[i+1]) === parseInt(nextTonic) && 
+                (parseInt(notes[i]) + 5 === parseInt(notes[i + 1]) || parseInt(notes[i]) - parseInt(notes[i + 1]) === 7)) {
                     i += 1;
                     break;
                 }
@@ -74,6 +78,7 @@ MuseScore {
             numberofsemitones[t.toString()] = semitonesArray; // Use the index string as the key in the object
         }
 
+        console.log("numberofsemitones", numberofsemitones);
         return numberofsemitones;
     }
 
@@ -85,7 +90,6 @@ MuseScore {
             var mode = "";
 
             for (var i = 0; i < semitones.length; i++) {
-                // Convertir los elementos de semitones a números enteros
                 var semitone = parseInt(semitones[i]);
 
                 if (semitone === 4 || semitone === 9 || semitone === -1 || semitone === -3) {
@@ -162,7 +166,10 @@ MuseScore {
             "5": 4,
             "6": { ascends: 5, descends: 8, unison: -1 },
             "7": { ascends: 5, descends: 5, unison: -1 },
-            "8": 7
+            "8": 7,
+            "9": { ascends: 1, descends: 11, unison: -1 },
+            "10": { ascends: 2, descends: 10, unison: -1 },
+            "11":  { ascends: 3, descends: 3, unison: -1 }
         };
 
         for (var i = 0; i < modes.length; i++) {
@@ -273,16 +280,16 @@ MuseScore {
             cursor.rewindToTick(tick)
             cursor.track = selectedElement.track
 
-            while (cursor && cursor.element && symbols.length > 0) {
+            while (cursor && cursor.element && selectedNotes.length > 0) {
                 if (cursor.element.type == Element.CHORD) {
                     var cifrado = newElement(Element.FIGURED_BASS)
-                    cifrado.text = symbols[0]
+                    cifrado.text = selectedNotes[0]
                     
                     curScore.startCmd()
                     cursor.add(cifrado)
                     curScore.endCmd()
 
-                    symbols.shift()
+                    selectedNotes.shift()
                 }
                 cursor.next()
             }
