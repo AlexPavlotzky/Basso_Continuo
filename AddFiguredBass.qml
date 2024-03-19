@@ -47,10 +47,10 @@ MuseScore {
         var filteredTonics = [tonics[0]]; // Initialize the array with the first tonic
         for (var j = 1; j < tonics.length; j++) {
             if (tonics[j] !== tonics[j - 1]) {
-                filteredTonics.push(tonics[j]); // If the current key is not the same as the previous one, add it to the filtered array
+                filteredTonics.push(tonics[j]);
             }
         }
-        console.log("Tónicas", filteredTonics);
+
         return filteredTonics;
     }
 
@@ -78,7 +78,6 @@ MuseScore {
             numberofsemitones[t.toString()] = semitonesArray; // Use the index string as the key in the object
         }
 
-        console.log("numberofsemitones", numberofsemitones);
         return numberofsemitones;
     }
 
@@ -94,8 +93,12 @@ MuseScore {
 
                 if (semitone === 4 || semitone === 9 || semitone === -1 || semitone === -3) {
                     mode = "major";
+                    break;
                 } else if (semitone === 3 || semitone === 8 || semitone === 10 || semitone === -2 || semitone === -4) {
                     mode = "minor";
+                    break;
+                } else {
+                    mode = "indefinite";
                 }
             }
 
@@ -105,29 +108,34 @@ MuseScore {
         return modes;
     }
 
-    function calculateGrades(numberofsemitones) {
-        const gradeMapping = { "-12": -8, "-10": -7, "-9": -6, "-8": -6, "-7": -5, "-5": -4, "-4": -3, "-3": -3, "-2": -2,
+    function calculateDegrees(numberofsemitones, notes) {
+        const degreesMapping = { "-12": -8, "-10": -7, "-9": -6, "-8": -6, "-7": -5, "-5": -4, "-4": -3, "-3": -3, "-2": -2,
             "-1": -2, "0": 1, "2": 2, "3": 3, "4": 3, "5": 4, "7": 5, "8": 6, "9": 6, "10": 7, "11": 7, "12": 8, "14": 9,
             "15": 10, "16": 10, "17": 11, "18": 18, "19": 18 };
 
-        var grades = {};
+        var degrees = {};
+        var tonics = detectTonics(notes);
 
-        // Loop through all tonics in numberofsemitones
         for (var tonic in numberofsemitones) {
             if (numberofsemitones.hasOwnProperty(tonic)) {
-                // Calculate the grades for the semitone distances associated with this tonic
-                var gradesArray = numberofsemitones[tonic].map(grade => gradeMapping[grade.toString()] || grade);
-                // Add the grades to the grades object
-                grades[tonic] = gradesArray;
+                var degreesArray = numberofsemitones[tonic].map(degree => degreesMapping[degree.toString()] || degree);
+                degrees[tonic] = degreesArray;
             }
         }
 
-        var gradesArray = [];
-        for (var key in grades) {
-            gradesArray.push(grades[key]);
+        var degreesArray = [];
+        for (var key in degrees) {
+            degreesArray.push(degrees[key]);
         }
 
-        return gradesArray;
+        if (tonics.length > 1) {
+            for (let i = 0; i < degreesArray.length; i++) {
+                let subArray = degreesArray[i];
+                subArray[subArray.length - 1] = 5;
+            }
+        }
+
+        return degreesArray;
     }
 
     function calculateIntervalDirections(notes) {
@@ -150,25 +158,29 @@ MuseScore {
         var directions = directionsofintervals;
         var indexDirection = 0;
         var figuredbass = {
-            major: ['835', '634', '683', '563', '358', '36', '3b56', '35', '34#6', '624', '836', '643'],
-            minor: ['358', '34#6','836', '635', '58#3', '363', 'b563', '358', '463', '#462', '683', '43#6']
+            major: ['835', '634', '683', '563', '358', '36', '3b56', '34#6', '624', '836', '643'],
+            minor: ['358', '34#6','836', '635', '58#3', '363', 'b563', '463', '#462', '683', '43#6'],
+            indefinite: ['358', 'NNN', 'NNN', '635', '58#3', 'NNN', 'NNN', 'NNN', 'NNN', 'NNN', 'NNN']
         };
 
-        var gradeMap = {
-            "-8": 7,
+        var degreesMap = {
+            "-8": 0,
+            "-7": { ascends: 1, descends: 10, unison: -1 },
+            "-6": { ascends: 2, descends: 9, unison: -1 },
+            "-5": { ascends: 3, descends: 3, unison: -1 },
             "-4": 4,
             "-3": { ascends: 5, descends: 5, unison: -1 },
             "-2": { ascends: 5, descends: 6, unison: -1 },
             "1": 0,
-            "2": { ascends: 1, descends: 11, unison: -1 },
-            "3": { ascends: 2, descends: 10, unison: -1 },
+            "2": { ascends: 1, descends: 10, unison: -1 },
+            "3": { ascends: 2, descends: 9, unison: -1 },
             "4": { ascends: 3, descends: 3, unison: -1 },
             "5": 4,
-            "6": { ascends: 5, descends: 8, unison: -1 },
+            "6": { ascends: 5, descends: 7, unison: -1 },
             "7": { ascends: 5, descends: 5, unison: -1 },
-            "8": 7,
-            "9": { ascends: 1, descends: 11, unison: -1 },
-            "10": { ascends: 2, descends: 10, unison: -1 },
+            "8": 0,
+            "9": { ascends: 1, descends: 10, unison: -1 },
+            "10": { ascends: 2, descends: 9, unison: -1 },
             "11":  { ascends: 3, descends: 3, unison: -1 }
         };
 
@@ -181,8 +193,8 @@ MuseScore {
                 var gradeKey = grade[t].toString();
                 var direction = directions[indexDirection];
 
-                if (gradeMap.hasOwnProperty(gradeKey)) {
-                    var index = gradeMap[gradeKey];
+                if (degreesMap.hasOwnProperty(gradeKey)) {
+                    var index = degreesMap[gradeKey];
                     if (typeof index === 'object') {
                         if (direction === "unison") {
                             figureIndex.push(figureIndex[indexDirection-1]);
@@ -204,7 +216,6 @@ MuseScore {
 
         return cifrasarray;
     }
-
 
     function replaceSymbols(array) {
         var figuresarray = [];
@@ -231,7 +242,8 @@ MuseScore {
                 figuresarray.push(figuresdictionary.figure2);
             } else if (array[i] == '246' || array[i] == '624' || array[i] == '462') {
                 figuresarray.push(figuresdictionary.figure3);
-            } else if (array[i] == '34#6' || array[i] == '634' || array[i] == '4#63' || array[i] == '643' || array[i] == '43#6' || array[i] == 'b364' || array[i] == '463') {
+            } else if (array[i] == '34#6' || array[i] == '634' || array[i] == '4#63' 
+                || array[i] == '643' || array[i] == '43#6' || array[i] == 'b364' || array[i] == '463') {
                 figuresarray.push(figuresdictionary.figure4);
             } else if (array[i] == '458' || array[i] == '854' || array[i] == '485') {
                 figuresarray.push(figuresdictionary.figure5);
@@ -261,7 +273,7 @@ MuseScore {
         }
 
         var numberSemitones = calculateNumberSemitones(selectedNotes)
-        var grades = calculateGrades(numberSemitones)
+        var grades = calculateDegrees(numberSemitones, selectedNotes)
         var modes = calculateModes(numberSemitones)
         var intervalDirections = calculateIntervalDirections(selectedNotes)
         var figuredBass = addFiguredBass(grades, intervalDirections, modes)
